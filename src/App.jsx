@@ -24,31 +24,28 @@ const App = () => {
     const [activePersonaId, setActivePersonaId] = useState(() => localStorage.getItem('hp_active_persona') || null);
     const [activeCharacterId, setActiveCharacterId] = useState(() => localStorage.getItem('hp_active_character') || null);
 
-    useEffect(() => {
-        localStorage.setItem('hp_personas', JSON.stringify(personas));
-    }, [personas]);
-
-    useEffect(() => {
-        localStorage.setItem('hp_characters', JSON.stringify(characters));
-    }, [characters]);
-
-    useEffect(() => {
-        localStorage.setItem('hp_active_persona', activePersonaId || '');
-    }, [activePersonaId]);
-
-    useEffect(() => {
-        localStorage.setItem('hp_active_character', activeCharacterId || '');
-    }, [activeCharacterId]);
+    useEffect(() => { localStorage.setItem('hp_personas', JSON.stringify(personas)); }, [personas]);
+    useEffect(() => { localStorage.setItem('hp_characters', JSON.stringify(characters)); }, [characters]);
+    useEffect(() => { localStorage.setItem('hp_active_persona', activePersonaId || ''); }, [activePersonaId]);
+    useEffect(() => { localStorage.setItem('hp_active_character', activeCharacterId || ''); }, [activeCharacterId]);
 
     useEffect(() => {
         const btn = document.createElement('div');
         btn.id = 'hp-toggle';
         btn.innerHTML = 'H+'; 
-        btn.style.cssText = 'cursor:pointer; padding:5px 10px; background:rgba(107,101,192,0.3); border:1px solid rgba(107,101,192,0.5); border-radius:5px; color:#fff; font-weight:bold; margin-left:5px;';
-        btn.onclick = () => setIsOpen(!isOpen);
+        btn.style.cssText = 'cursor:pointer; padding:5px 10px; background:rgba(107,101,192,0.3); border:1px solid rgba(107,101,192,0.5); border-radius:5px; color:#fff; font-weight:bold; margin-left:5px; z-index:99999;';
+        btn.onclick = () => setIsOpen(prev => !prev);
         
         const topBar = document.getElementById('top-bar');
-        if(topBar) topBar.appendChild(btn);
+        if(topBar) {
+            topBar.appendChild(btn);
+        } else {
+            // Fallback if the top bar hasn't loaded yet
+            btn.style.position = 'fixed';
+            btn.style.top = '10px';
+            btn.style.right = '10px';
+            document.body.appendChild(btn);
+        }
     }, []);
 
     const addPersona = () => {
@@ -56,30 +53,16 @@ const App = () => {
         setPersonas([...personas, newPersona]);
         setActivePersonaId(newPersona.id);
     };
-
-    const updatePersona = (id, key, value) => {
-        setPersonas(personas.map(p => p.id === id ? { ...p, [key]: value } : p));
-    };
-
-    const deletePersona = (id) => {
-        setPersonas(personas.filter(p => p.id !== id));
-        if (activePersonaId === id) setActivePersonaId(null);
-    };
+    const updatePersona = (id, key, value) => setPersonas(personas.map(p => p.id === id ? { ...p, [key]: value } : p));
+    const deletePersona = (id) => { setPersonas(personas.filter(p => p.id !== id)); if (activePersonaId === id) setActivePersonaId(null); };
 
     const addCharacter = () => {
         const newChar = { id: generateId(), name: 'New Character', description: '', personality: '', scenario: '', firstMessage: '', color: '#c06b6b' };
         setCharacters([...characters, newChar]);
         setActiveCharacterId(newChar.id);
     };
-
-    const updateCharacter = (id, key, value) => {
-        setCharacters(characters.map(c => c.id === id ? { ...c, [key]: value } : c));
-    };
-
-    const deleteCharacter = (id) => {
-        setCharacters(characters.filter(c => c.id !== id));
-        if (activeCharacterId === id) setActiveCharacterId(null);
-    };
+    const updateCharacter = (id, key, value) => setCharacters(characters.map(c => c.id === id ? { ...c, [key]: value } : c));
+    const deleteCharacter = (id) => { setCharacters(characters.filter(c => c.id !== id)); if (activeCharacterId === id) setActiveCharacterId(null); };
 
     return (
         <DrawerPanel isOpen={isOpen} onClose={() => setIsOpen(false)}>
@@ -88,7 +71,6 @@ const App = () => {
                     <h2>Helper<span>+</span></h2>
                     <button className="hp-close-btn" onClick={() => setIsOpen(false)}>✕</button>
                 </div>
-                
                 <div className="hp-tabs">
                     {['landing', 'personas', 'characters', 'settings'].map(tab => (
                         <button key={tab} className={`hp-tab ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
@@ -96,7 +78,6 @@ const App = () => {
                         </button>
                     ))}
                 </div>
-
                 <div className="hp-content">
                     {activeTab === 'landing' && <LandingTab personas={personas} characters={characters} activePersonaId={activePersonaId} activeCharacterId={activeCharacterId} switchTab={setActiveTab} />}
                     {activeTab === 'personas' && <PersonaTab personas={personas} activePersonaId={activePersonaId} setActivePersonaId={setActivePersonaId} addPersona={addPersona} updatePersona={updatePersona} deletePersona={deletePersona} />}
